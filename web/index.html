@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>User Analytics Demo</title>
+</head>
+
+<body>
+
+    <h1>Analytics Demo</h1>
+
+    <section>
+        <h2>Кнопки</h2>
+
+        <button
+            id="buy-button"
+            data-analytics-name="buy-button">
+            Купить
+        </button>
+
+        <button
+            id="cancel-button"
+            data-analytics-name="cancel-button">
+            Отмена
+        </button>
+    </section>
+
+    <section>
+        <h2>Поля ввода</h2>
+
+        <label>
+            Имя:
+            <input
+                type="text"
+                id="name"
+                data-analytics-name="name"
+                placeholder="Введите имя">
+        </label>
+
+        <br><br>
+
+        <label>
+            Email:
+            <input
+                type="email"
+                id="email"
+                data-analytics-name="email"
+                placeholder="Введите email">
+        </label>
+    </section>
+
+    <section>
+        <h2>Slider</h2>
+
+        <label for="volume">
+            Громкость:
+        </label>
+
+        <input
+            type="range"
+            id="volume"
+            min="0"
+            max="100"
+            value="50"
+            data-analytics-name="volume">
+
+        <span id="volume-value">50</span>
+    </section>
+
+    <section>
+        <h2>Checkbox</h2>
+
+        <label>
+            <input
+                type="checkbox"
+                id="newsletter"
+                data-analytics-name="newsletter">
+
+            Получать новости
+        </label>
+    </section>
+
+    <section>
+        <h2>Radio buttons</h2>
+
+        <label>
+            <input
+                type="radio"
+                name="color"
+                value="red"
+                data-analytics-name="color">
+
+            Красный
+        </label>
+
+        <label>
+            <input
+                type="radio"
+                name="color"
+                value="blue"
+                data-analytics-name="color">
+
+            Синий
+        </label>
+
+        <label>
+            <input
+                type="radio"
+                name="color"
+                value="green"
+                data-analytics-name="color">
+
+            Зелёный
+        </label>
+    </section>
+
+    <section>
+        <h2>Выпадающий список</h2>
+
+        <label for="country">
+            Страна:
+        </label>
+
+        <select
+            id="country"
+            data-analytics-name="country">
+
+            <option value="">
+                Выберите страну
+            </option>
+
+            <option value="ru">
+                Россия
+            </option>
+
+            <option value="de">
+                Германия
+            </option>
+
+            <option value="fr">
+                Франция
+            </option>
+
+            <option value="nl">
+                Нидерланды
+            </option>
+
+        </select>
+    </section>
+
+    <script src="analytics.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
