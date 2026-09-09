@@ -6,20 +6,33 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/twmb/franz-go/pkg/kgo"
+	"github.com/IBM/sarama"
 )
 
 type Producer struct {
-	client *kgo.Client
+    producer sarama.AsyncProducer
 }
 
-func NewProducer(brokers string) (*Producer, error) {
-	client, err := kgo.NewClient(kgo.SeedBrokers(brokers))
+func NewProducer(brokers ...string) (*Producer, error) {
+	config := sarama.NewConfig()
+
+	config.Producer.Return.Errors = true
+	config.Producer.Return.Successes = false
+	config.Producer.RequiredAcks = sarama.WaitForLocal
+
+	producer, err := sarama.NewAsyncProducer(brokers, config)
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		for err := range producer.Errors() {
+			log.Printf("failed to produce event: %v", err)
+		}
+	}()
+
 	return &Producer{
-		client: client,
+		producer: producer,
 	}, nil
 }
 
@@ -29,24 +42,20 @@ func (p *Producer) Produce(ctx context.Context, event model.Event) error {
 		return err
 	}
 
-	record := &kgo.Record{
+	message := &sarama.ProducerMessage{
 		Topic: "user-events",
-		Key: []byte(event.SessionID),
-		Value: data,
+		Key:   sarama.StringEncoder(event.SessionID),
+		Value: sarama.ByteEncoder(data),
 	}
 
-	produceCtx := context.WithoutCancel(ctx)
-
-	p.client.Produce(produceCtx, record, func(r *kgo.Record, err error) {
-		if err != nil {
-			log.Printf("failed to produce event: %v", err)
-			return 
-		}
-		log.Printf("produced event to kafka: key=%s", record.Key)
-	})
-	return nil
+	select {
+	case p.producer.Input() <- message:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
-func (p *Producer) Close() {
-    p.client.Close()
+func (p *Producer) Close() error {
+	return p.producer.Close()
 }

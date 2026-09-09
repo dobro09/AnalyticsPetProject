@@ -1,1 +1,1 @@
-package analyticsworker
+package main
