@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"analytics/internal/model"
+	"analytics/internal/usecase"
 	"context"
 	"encoding/json"
 	"log"
@@ -20,6 +21,7 @@ func NewConsumer(brokers []string, groupID string) (*Consumer, error) {
         sarama.NewBalanceStrategyRoundRobin(),
     }
 	config.Consumer.Offsets.Initial = sarama.OffsetNewest
+	config.Consumer.Return.Errors = true
 
 	group, err := sarama.NewConsumerGroup(
 		brokers,
@@ -27,9 +29,14 @@ func NewConsumer(brokers []string, groupID string) (*Consumer, error) {
 		config,
 	)
 	if err != nil {
-		log.Println("ошибка сосздания конс группы")
+		log.Printf("ошибка сосздания конс группы: %v", err)
 		return nil, err
 	}
+	go func() {
+    	for err := range group.Errors() {
+     	   log.Printf("consumer group error: %v", err)
+    	}
+	}()
 
 	return &Consumer{
 		group: group,
@@ -52,15 +59,22 @@ func (c *Consumer) Consume(ctx context.Context, topics []string, handler *Consum
 func (c *Consumer) Close() error {
 	return c.group.Close()
 }
+
 type ConsumerHandler struct {
-	
+	usecase usecase.AnalyticsUsecase
 }
 
-func (h *ConsumerHandler) Setup(session sarama.ConsumerGroupSession,) error {
+func NewConsumerHandler(uc usecase.AnalyticsUsecase) *ConsumerHandler {
+	return &ConsumerHandler{
+		usecase: uc,
+	}
+}
+
+func (h *ConsumerHandler) Setup(session sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (h *ConsumerHandler) Cleanup(session sarama.ConsumerGroupSession,) error {
+func (h *ConsumerHandler) Cleanup(session sarama.ConsumerGroupSession) error {
 	return nil
 }
 
@@ -73,8 +87,12 @@ func (h *ConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 			log.Printf("failed to unmarshal event, offset=%d: %v", message.Offset, err)
 			continue
 		}
-		
-		log.Printf("event received: type=%s session=%s",event.EventType,event.SessionID)
+
+		if err := h.usecase.Analyse(session.Context(), event); err != nil {
+			log.Printf("failed to process event, offset=%d: %v", message.Offset, err)
+			continue
+		}
+		log.Printf("event received: type=%s session=%s", event.EventType, event.SessionID)
 		session.MarkMessage(message, "")
 	}
 	return nil
