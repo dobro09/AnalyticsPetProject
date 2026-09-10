@@ -9,3 +9,9 @@ type Event struct {
     SessionID string         `json:"session_id"` // uuid
     Data      map[string]any `json:"data,omitempty"` // может быть пустым?
 }
+
+type EventAnalytics struct {
+	EventType   string
+	WindowStart time.Time
+	WindowEnd   time.Time
+}

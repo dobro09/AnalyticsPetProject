@@ -36,14 +36,14 @@ func NewProducer(brokers ...string) (*Producer, error) {
 	}, nil
 }
 
-func (p *Producer) Produce(ctx context.Context, event model.Event) error {
+func (p *Producer) Produce(ctx context.Context, event model.Event, topic string) error {
 	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
 
 	message := &sarama.ProducerMessage{
-		Topic: "user-events",
+		Topic: topic,
 		Key:   sarama.StringEncoder(event.SessionID),
 		Value: sarama.ByteEncoder(data),
 	}

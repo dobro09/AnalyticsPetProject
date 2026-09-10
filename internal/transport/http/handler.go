@@ -48,7 +48,7 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	event := req.ToModel()
 	log.Printf("полученные данные: %+v", event)
 
-	if err := h.producer.Produce(ctx, event); err != nil {
+	if err := h.producer.Produce(ctx, event, "user-events"); err != nil {
 		http.Error(w, "failed to publish event", http.StatusInternalServerError)
 		return
 	}
